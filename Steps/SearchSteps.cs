@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using EtsyBDD.Drivers;
+using EtsyBDD.PageObjects;
+using NUnit.Framework;
 using System;
 using TechTalk.SpecFlow;
 
@@ -7,30 +9,43 @@ namespace EtsyBDD.Steps
     [Binding]
     public class SearchSteps
     {
-        public TestContext TestContext { get; set; }
-        string url;
-        string username;
-        string password;
+        public TestContext? TestContext { get; set; }
+
+        private readonly BrowserDriver _browserDriver;
+        private string _baseUrl;
+        private HomePage? _homePage;
+        private SearchResultsPage? _searchResultsPage;
+
+        public SearchSteps(BrowserDriver browserDriver)
+        {
+            _browserDriver = browserDriver;
+            _baseUrl = TestContext.Parameters["url"] ?? "";
+        }
+
+        [Given(@"home page is open")]
+        public void GivenEtsyOpen()
+        {
+            _homePage = new HomePage(_browserDriver.Current, _baseUrl);
+            _homePage = _homePage.GoToPage();
+        }
 
         [Given(@"search query is ""(.*)""")]
         public void GivenSearchQueryIs(string searchQuery)
         {
-            url = TestContext.Parameters["url"] ?? "null";
-            Console.WriteLine("search query is " + searchQuery + "and url is " + url);
+            _homePage!.EnterSearchQuery(searchQuery);
         }
-        
+
         [When(@"search is run")]
         public void WhenSearchIsRun()
         {
-            username = TestContext.Parameters["username"] ?? "null";
-            Console.WriteLine("search is run and username is " + username);
+            _searchResultsPage = _homePage!.ClickSearchButton();
         }
-        
+
         [Then(@"every item in search results has ""(.*)"" in title")]
-        public void ThenEveryItemInSearchResultsHasInTitle(string p0)
+        public void ThenEveryItemInSearchResultsHasInTitle(string searchQuery)
         {
-            password = TestContext.Parameters["password"] ?? "null";
-            Console.WriteLine("checking search results and password is " + password);
+            bool titlesHaveQuery = _searchResultsPage!.AllItemTitlesContainSearchQuery(searchQuery);
+            Assert.IsTrue(titlesHaveQuery);
         }
     }
 }

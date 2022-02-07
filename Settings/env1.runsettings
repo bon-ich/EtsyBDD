@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?> 
+<!-- Parameters used by tests at run time -->
+<RunSettings>
+	<TestRunParameters>
+		<Parameter name="url" value="https://www.etsy.com/" />
+		<Parameter name="username" value="username111" />
+		<Parameter name="password" value="password111" />
+	</TestRunParameters>
+</RunSettings>

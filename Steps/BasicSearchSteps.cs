@@ -1,13 +1,12 @@
 ﻿using EtsyBDD.Drivers;
 using EtsyBDD.PageObjects;
 using NUnit.Framework;
-using System;
 using TechTalk.SpecFlow;
 
 namespace EtsyBDD.Steps
 {
     [Binding]
-    public class SearchSteps
+    public class BasicSearchSteps
     {
         public TestContext? TestContext { get; set; }
 
@@ -16,28 +15,23 @@ namespace EtsyBDD.Steps
         private HomePage? _homePage;
         private SearchResultsPage? _searchResultsPage;
 
-        public SearchSteps(BrowserDriver browserDriver)
+        public BasicSearchSteps(BrowserDriver browserDriver)
         {
             _browserDriver = browserDriver;
             _baseUrl = TestContext.Parameters["url"] ?? "";
         }
 
-        [Given(@"home page is open")]
-        public void GivenEtsyOpen()
+        [Given(@"unauthorized user is on the home page")]
+        public void GivenUnauthorizedUserOpensHomePage()
         {
             _homePage = new HomePage(_browserDriver.Current, _baseUrl);
             _homePage = _homePage.GoToPage();
         }
 
-        [Given(@"search query is ""(.*)""")]
-        public void GivenSearchQueryIs(string searchQuery)
+        [When(@"user searches for ""(.*)""")]
+        public void WhenUserSearchesFor(string searchQuery)
         {
             _homePage!.EnterSearchQuery(searchQuery);
-        }
-
-        [When(@"search is run")]
-        public void WhenSearchIsRun()
-        {
             _searchResultsPage = _homePage!.ClickSearchButton();
         }
 
@@ -46,6 +40,13 @@ namespace EtsyBDD.Steps
         {
             bool titlesHaveQuery = _searchResultsPage!.AllItemTitlesContainSearchQuery(searchQuery);
             Assert.IsTrue(titlesHaveQuery);
+        }
+
+        [Then(@"no search results available for ""(.*)""")]
+        public void ThenNoSearchResultsAvailable(string searchQuery)
+        {
+            bool pass = _searchResultsPage!.NoResultsTextContainsSearchQuery(searchQuery);
+            Assert.IsTrue(pass);
         }
     }
 }

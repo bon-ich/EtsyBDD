@@ -10,6 +10,7 @@ namespace EtsyBDD.PageObjects
 
         private const string _searchResultItem = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li";
         private const string _searchResultItemsTitle = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li//h3";
+        private const string _noResultsText = "//p[@class='wt-text-heading-02 wt-pt-xs-8']";
 
         public SearchResultsPage(IWebDriver driver)
         {
@@ -62,6 +63,12 @@ namespace EtsyBDD.PageObjects
                 }
             }
             return allElementsHaveQueryInTitle;
+        }
+    
+        public bool NoResultsTextContainsSearchQuery(string searchQuery)
+        {
+            IWebElement noResultsText = _driver.FindElement(By.XPath(_noResultsText));            
+            return noResultsText.Text.Contains(searchQuery);
         }
     }
 }

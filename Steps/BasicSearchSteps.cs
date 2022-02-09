@@ -48,5 +48,12 @@ namespace EtsyBDD.Steps
             bool pass = _searchResultsPage!.NoResultsTextContainsSearchQuery(searchQuery);
             Assert.IsTrue(pass);
         }
+
+        [Then(@"every item in search results can be opened")]
+        public void ThenEveryItemInResultCanBeOpened()
+        {
+            bool pass = _searchResultsPage!.AllSearchItemsHaveLink();
+            Assert.IsTrue(pass);
+        }
     }
 }

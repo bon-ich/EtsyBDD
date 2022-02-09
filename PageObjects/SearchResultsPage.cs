@@ -11,6 +11,7 @@ namespace EtsyBDD.PageObjects
         private const string _searchResultItem = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li";
         private const string _searchResultItemsTitle = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li//h3";
         private const string _noResultsText = "//p[@class='wt-text-heading-02 wt-pt-xs-8']";
+        private const string _searchResultItemLink = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li//a[contains(@class, 'listing-link')]";
 
         public SearchResultsPage(IWebDriver driver)
         {
@@ -64,11 +65,28 @@ namespace EtsyBDD.PageObjects
             }
             return allElementsHaveQueryInTitle;
         }
-    
+
         public bool NoResultsTextContainsSearchQuery(string searchQuery)
         {
-            IWebElement noResultsText = _driver.FindElement(By.XPath(_noResultsText));            
+            IWebElement noResultsText = _driver.FindElement(By.XPath(_noResultsText));
             return noResultsText.Text.Contains(searchQuery);
+        }
+
+        public bool AllSearchItemsHaveLink()
+        {
+            int itemsLinks = 0;
+            IList<IWebElement> foundLinks = new List<IWebElement>();
+            foundLinks = _driver.FindElements(By.XPath(_searchResultItemLink));
+            foreach (var link in foundLinks)
+            {
+                string href = link.GetAttribute("href");
+                if (href != null || href != "")
+                {
+                    itemsLinks += 1;
+                }                
+            }
+            var searchResultItems = GetSearchResultItems();
+            return itemsLinks == searchResultItems.Count;
         }
     }
 }

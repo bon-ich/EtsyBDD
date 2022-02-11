@@ -14,6 +14,9 @@ namespace EtsyBDD.Steps
         private string _baseUrl;
         private HomePage? _homePage;
         private SearchResultsPage? _searchResultsPage;
+        private string _appliedFilter = "";
+        private decimal _minPrice = 0;
+        private decimal _maxPrice = 0;
 
         public BasicSearchSteps(BrowserDriver browserDriver)
         {
@@ -33,6 +36,38 @@ namespace EtsyBDD.Steps
         {
             _homePage!.EnterSearchQuery(searchQuery);
             _searchResultsPage = _homePage!.ClickSearchButton();
+        }
+
+        [When(@"user applies ""(.*)"" filter")]
+        public void WhenUserAppliesPredefinedPriceFilter(string filterName)
+        {
+            _searchResultsPage!.ApplyFilter(filterName);
+            _appliedFilter = filterName;
+        }
+
+        [When(@"user applies custom filter to price between (.*) and (.*)")]
+        public void WhenUserAppliesCustomPriceFilter(decimal minPrice, decimal maxPrice)
+        {
+            _searchResultsPage!.ApplyCustomPriceFilter(minPrice, maxPrice);
+            _minPrice = minPrice;
+            _maxPrice = maxPrice;
+            _appliedFilter = "Custom Price Filter";
+        }
+
+        [Then(@"search results respect the applied filter")]
+        public void ThenSearchResultsRespectAppliedFilter()
+        {
+            bool pass = false;
+            switch (_appliedFilter)
+            {
+                case "USD 25 to USD 50":
+                    pass = _searchResultsPage!.DoSearchResultsRespectPriceFilter(25, 50);
+                    break;
+                case "Custom Price Filter":
+                    pass = _searchResultsPage!.DoSearchResultsRespectPriceFilter(_minPrice, _maxPrice);
+                    break;
+            }
+            Assert.IsTrue(pass);
         }
 
         [Then(@"every item in search results has ""(.*)"" in title")]

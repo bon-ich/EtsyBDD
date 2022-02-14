@@ -32,6 +32,7 @@ namespace EtsyBDD.Drivers
             var chromeDriverService = ChromeDriverService.CreateDefaultService();
 
             var chromeOptions = new ChromeOptions();
+            chromeOptions.AddArguments("--start-maximized");
 
             var chromeDriver = new ChromeDriver(chromeDriverService, chromeOptions);
 

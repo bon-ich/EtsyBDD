@@ -13,8 +13,9 @@ namespace EtsyBDD.PageObjects
         private const int _waitTime = 5;
 
         private const string _searchResultItem = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li";
+        private const string _searchResultItemAdItem = "//span[contains(.,'Ad by')]/ancestor::li";
         private const string _searchResultItemsTitle = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li//h3";
-        private const string _searchResultItemsPrice = _searchResultItem + "//p[@class='wt-text-title-01']//span[@class='currency-value']";
+        private const string _searchResultItemsPrice = ".//p[@class='wt-text-title-01']//span[@class='currency-value']";
         private const string _noResultsText = "//p[@class='wt-text-heading-02 wt-pt-xs-8']";
         private const string _searchResultItemLink = "//div[contains(@class, 'search-listings-group')]//ul[contains(@class, 'tab-reorder-container')]//li//a[contains(@class, 'listing-link')]";
         private const string _allFiltersButtons = "//button[@id='search-filter-button']";
@@ -23,6 +24,8 @@ namespace EtsyBDD.PageObjects
         private const string _applyFiltersButton = "//button[@aria-label='Apply']";
         private const string _minPriceFilterField = "//input[@id='search-filter-min-price-input']";
         private const string _maxPriceFilterField = "//input[@id='search-filter-max-price-input']";
+        private const string _sortByDropdown = "//button[contains(@title, 'Sort by:')]";
+        private const string _sortByOption = "//a[@class='wt-menu__item ' and contains(., '{0}')]";
 
         private WebDriverWait _wait;
 
@@ -39,7 +42,92 @@ namespace EtsyBDD.PageObjects
             return foundItems;
         }
 
-        public SearchResultsPage ApplyCustomPriceFilter(decimal minPrice, decimal maxPrice)
+        public IList<IWebElement> GetAdItems()
+        {
+            IList<IWebElement> adItems = new List<IWebElement>();
+            adItems = _driver.FindElements(By.XPath(_searchResultItemAdItem));
+            Console.WriteLine("ad items count: " + adItems.Count);
+            return adItems;
+        }
+
+        public void ApplySorting(string sortBy)
+        {
+            // expand sort dropdown
+            IWebElement sortByDropdown = _driver.FindElement(By.XPath(_sortByDropdown));
+            sortByDropdown.Click();
+            // select sort option
+            IWebElement sortByOption = _driver.FindElement(By.XPath(String.Format(_sortByOption, sortBy)));
+            sortByOption.Click();
+
+            // wait until items update
+            WaitUntilItemsUpdate();
+        }
+
+        public bool IsPriceSortingCorrect(bool highest)
+        {
+            bool sortingCorrect = true;
+            // get items 
+            var items = new List<IWebElement>(GetSearchResultItems());
+            Console.WriteLine("not filtered items count: " + items.Count);
+
+            var adItems = GetAdItems();
+
+            // filter items
+            foreach (IWebElement i in adItems)
+            {
+                if (items.Contains(i))
+                {
+                    items.Remove(i);
+                }
+            }
+            Console.WriteLine("filtered items count: " + items.Count);
+
+            // check sorting from high to low
+            if (highest)
+            {
+                double previousPrice = double.MaxValue;
+                foreach (IWebElement item in items)
+                {
+                    var priceText = item.FindElement(By.XPath(_searchResultItemsPrice)).Text;
+                    double price = double.Parse(priceText);
+                    Console.WriteLine($"checking if {price} < {previousPrice}");
+                    if (price > previousPrice)
+                    {
+                        sortingCorrect = false;
+                        break;
+                    }
+                    if (!sortingCorrect)
+                    {
+                        break;
+                    }
+                    previousPrice = price;
+                }
+            }
+            // check sorting from low
+            else
+            {
+                double previousPrice = double.MinValue;
+                foreach (IWebElement item in items)
+                {
+                    var priceText = item.FindElement(By.XPath(_searchResultItemsPrice)).Text;
+                    double price = double.Parse(priceText);
+                    Console.WriteLine($"checking if {price} > {previousPrice}");
+                    if (price < previousPrice)
+                    {
+                        sortingCorrect = false;
+                        break;
+                    }
+                    if (!sortingCorrect)
+                    {
+                        break;
+                    }
+                    previousPrice = price;
+                }
+            }
+            return sortingCorrect;
+        }
+
+        public void ApplyCustomPriceFilter(decimal minPrice, decimal maxPrice)
         {
             OpenFilters();
             _wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(_filtersMenu)));
@@ -50,8 +138,7 @@ namespace EtsyBDD.PageObjects
             maxPriceField.SendKeys(maxPrice.ToString());
 
             ClickApplyFiltersButton();
-            WaitUntillItemsUpdate();
-            return this;
+            WaitUntilItemsUpdate();
         }
 
         public List<string> GetItemsTitles()
@@ -67,7 +154,7 @@ namespace EtsyBDD.PageObjects
 
         public List<decimal> GetItemsPrices()
         {
-            var priceTests = _driver.FindElements(By.XPath(_searchResultItemsPrice));
+            var priceTests = _driver.FindElements(By.XPath(_searchResultItem + _searchResultItemsPrice));
             List<decimal> prices = new List<decimal>();
 
             foreach (IWebElement p in priceTests)
@@ -134,14 +221,13 @@ namespace EtsyBDD.PageObjects
             return itemsLinks == searchResultItems.Count;
         }
 
-        public SearchResultsPage ApplyFilter(string filterName)
+        public void ApplyFilter(string filterName)
         {
             OpenFilters();
             _wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(_filtersMenu)));
             SelectFilter(filterName);
             ClickApplyFiltersButton();
-            WaitUntillItemsUpdate();
-            return this;
+            WaitUntilItemsUpdate();
         }
 
         public bool DoSearchResultsRespectPriceFilter(decimal min, decimal max)
@@ -161,11 +247,10 @@ namespace EtsyBDD.PageObjects
             return respect;
         }
 
-        public SearchResultsPage WaitUntillItemsUpdate()
+        public void WaitUntilItemsUpdate()
         {
             var item = GetSearchResultItems()[0];
             _wait.Until(ExpectedConditions.StalenessOf(item));
-            return this;
         }
 
         private void OpenFilters()
@@ -183,12 +268,11 @@ namespace EtsyBDD.PageObjects
             Console.WriteLine("Selected filter " + filterName);
         }
 
-        private SearchResultsPage ClickApplyFiltersButton()
+        private void ClickApplyFiltersButton()
         {
             IWebElement applyButton = _driver.FindElement(By.XPath(_applyFiltersButton));
             applyButton.Click();
             Console.WriteLine("Clicked apply filters button");
-            return this;
         }
     }
 }

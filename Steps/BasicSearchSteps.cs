@@ -1,4 +1,5 @@
-﻿using EtsyBDD.Drivers;
+﻿using System;
+using EtsyBDD.Drivers;
 using EtsyBDD.PageObjects;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
@@ -15,6 +16,7 @@ namespace EtsyBDD.Steps
         private HomePage? _homePage;
         private SearchResultsPage? _searchResultsPage;
         private string _appliedFilter = "";
+        private string _appliedSorting = "";
         private decimal _minPrice = 0;
         private decimal _maxPrice = 0;
 
@@ -54,6 +56,31 @@ namespace EtsyBDD.Steps
             _appliedFilter = "Custom Price Filter";
         }
 
+        [When(@"user sorts search results by ""(.*)""")]
+        public void WhenUserSortsSearchResultsBy(string sortBy)
+        {
+            _searchResultsPage!.ApplySorting(sortBy);
+            _appliedSorting = sortBy;
+        }
+
+        [Then(@"search results respect applied sorting")]
+        public void ThenSearchResultRespectAppliedSorting()
+        {
+            bool pass = false;
+            switch (_appliedSorting)
+            {
+                case "Highest Price":
+                    Console.WriteLine("checking sorting for highest price");
+                    pass = _searchResultsPage!.IsPriceSortingCorrect(true);
+                    break;
+                case "Lowest Price":
+                    Console.WriteLine("checking sorting for lowest price");
+                    pass = _searchResultsPage!.IsPriceSortingCorrect(false);
+                    break;
+            }
+            Assert.IsTrue(pass, "Sorting is wrong");
+        }
+
         [Then(@"search results respect the applied filter")]
         public void ThenSearchResultsRespectAppliedFilter()
         {
@@ -67,28 +94,28 @@ namespace EtsyBDD.Steps
                     pass = _searchResultsPage!.DoSearchResultsRespectPriceFilter(_minPrice, _maxPrice);
                     break;
             }
-            Assert.IsTrue(pass);
+            Assert.IsTrue(pass, "Search results don't respect the applied filter");
         }
 
         [Then(@"every item in search results has ""(.*)"" in title")]
         public void ThenEveryItemInSearchResultsHasInTitle(string searchQuery)
         {
             bool titlesHaveQuery = _searchResultsPage!.AllItemTitlesContainSearchQuery(searchQuery);
-            Assert.IsTrue(titlesHaveQuery);
+            Assert.IsTrue(titlesHaveQuery, "Search results don't have search query in the title");
         }
 
         [Then(@"no search results available for ""(.*)""")]
         public void ThenNoSearchResultsAvailable(string searchQuery)
         {
             bool pass = _searchResultsPage!.NoResultsTextContainsSearchQuery(searchQuery);
-            Assert.IsTrue(pass);
+            Assert.IsTrue(pass, "Search doesn't provide any results");
         }
 
         [Then(@"every item in search results can be opened")]
         public void ThenEveryItemInResultCanBeOpened()
         {
             bool pass = _searchResultsPage!.AllSearchItemsHaveLink();
-            Assert.IsTrue(pass);
+            Assert.IsTrue(pass, "Can't open all items from search results");
         }
     }
 }

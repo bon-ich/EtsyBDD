@@ -54,9 +54,11 @@ namespace EtsyBDD.PageObjects
         {
             // expand sort dropdown
             IWebElement sortByDropdown = _driver.FindElement(By.XPath(_sortByDropdown));
+            WaitUntilElementIsClickable(sortByDropdown);
             sortByDropdown.Click();
             // select sort option
             IWebElement sortByOption = _driver.FindElement(By.XPath(String.Format(_sortByOption, sortBy)));
+            WaitUntilElementIsClickable(sortByOption);
             sortByOption.Click();
 
             // wait until items update
@@ -247,15 +249,20 @@ namespace EtsyBDD.PageObjects
             return respect;
         }
 
-        public void WaitUntilItemsUpdate()
+        private void WaitUntilItemsUpdate()
         {
             var item = GetSearchResultItems()[0];
             _wait.Until(ExpectedConditions.StalenessOf(item));
         }
 
+        private void WaitUntilElementIsClickable(IWebElement element)
+        {
+            _wait.Until(ExpectedConditions.ElementToBeClickable(element));
+        }
         private void OpenFilters()
         {
             IWebElement filtersButton = _driver.FindElement(By.XPath(_allFiltersButtons));
+            WaitUntilElementIsClickable(filtersButton);
             filtersButton.Click();
             Console.WriteLine("Clicked open filters button");
         }
@@ -264,6 +271,7 @@ namespace EtsyBDD.PageObjects
         {
             string selector = String.Format(_filterCheckbox, filterName);
             IWebElement filter = _driver.FindElement(By.XPath(selector));
+            WaitUntilElementIsClickable(filter);
             filter.Click();
             Console.WriteLine("Selected filter " + filterName);
         }
@@ -271,6 +279,7 @@ namespace EtsyBDD.PageObjects
         private void ClickApplyFiltersButton()
         {
             IWebElement applyButton = _driver.FindElement(By.XPath(_applyFiltersButton));
+            WaitUntilElementIsClickable(applyButton);
             applyButton.Click();
             Console.WriteLine("Clicked apply filters button");
         }

@@ -2,6 +2,7 @@
 using EtsyBDD.Drivers;
 using EtsyBDD.PageObjects;
 using NUnit.Framework;
+using OpenQA.Selenium;
 using TechTalk.SpecFlow;
 
 namespace EtsyBDD.Steps
@@ -116,6 +117,21 @@ namespace EtsyBDD.Steps
         {
             bool pass = _searchResultsPage!.AllSearchItemsHaveLink();
             Assert.IsTrue(pass, "Can't open all items from search results");
+        }
+
+        [Then("all item link leads to proper item page")]
+        public void ThenAllItemsLinkLeadToProperItemPage()
+        {
+            var items = _searchResultsPage!.GetSearchResultItems();
+            foreach (IWebElement i in items)
+            {
+                string searchItemTitle = _searchResultsPage!.GetItemTitle(i);
+                _searchResultsPage!.OpenSearchItemInNewTab(i);
+                ItemPage itemPage = _searchResultsPage!.SwitchToItemTab();
+                string itemTitle = itemPage.GetItemTitle();
+                Assert.IsTrue(itemTitle == searchItemTitle, "Item titles are not equal");
+                itemPage.CloseTab();
+            }
         }
     }
 }

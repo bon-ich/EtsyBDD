@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 
@@ -170,6 +171,12 @@ namespace EtsyBDD.PageObjects
             return prices;
         }
 
+        public string GetItemTitle(IWebElement item)
+        {
+            var title = item.FindElement(By.XPath(".//h3"));
+            return title.Text;
+        }
+
         public bool AllItemTitlesContainSearchQuery(string searchQuery)
         {
             bool allElementsHaveQueryInTitle = true;
@@ -247,6 +254,24 @@ namespace EtsyBDD.PageObjects
                 }
             }
             return respect;
+        }
+
+        public void OpenSearchItemInNewTab(IWebElement searchItem)
+        {
+            // perform ctrl + click to open item in a new tab without switching to it
+            Console.WriteLine("open item in a new tab");
+            Actions builder = new Actions(_driver);
+            builder = builder.KeyDown(Keys.Control)
+                .Click(searchItem)
+                .KeyUp(Keys.Control);
+            IAction ctrlClick = builder.Build();
+            ctrlClick.Perform();
+        }
+
+        public ItemPage SwitchToItemTab()
+        {
+            _driver.SwitchTo().Window(_driver.WindowHandles[1]);
+            return new ItemPage(_driver);
         }
 
         private void WaitUntilItemsUpdate()
